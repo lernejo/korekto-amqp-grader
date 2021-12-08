@@ -6,10 +6,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.github.lernejo.korekto.grader.amqp.parts.Part1Grader;
-import com.github.lernejo.korekto.grader.amqp.parts.Part2Grader;
-import com.github.lernejo.korekto.grader.amqp.parts.Part3Grader;
-import com.github.lernejo.korekto.grader.amqp.parts.PartGrader;
+import com.github.lernejo.korekto.grader.amqp.parts.*;
 import com.github.lernejo.korekto.toolkit.Exercise;
 import com.github.lernejo.korekto.toolkit.GradePart;
 import com.github.lernejo.korekto.toolkit.Grader;
@@ -104,7 +101,8 @@ public class AmqpGrader implements Grader {
         return List.of(
             new Part1Grader(),
             new Part2Grader(),
-            new Part3Grader(client)
+            new Part3Grader(client),
+            new Part4Grader(client)
         );
     }
 }

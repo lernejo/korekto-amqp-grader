@@ -51,6 +51,8 @@ public class Part3Grader implements PartGrader {
             return result(List.of("Not trying to start server as compilation failed"), 0.0D);
         }
 
+        MavenExecutor.executeGoal(exercise, configuration.getWorkspace(), "org.springframework.boot:spring-boot-maven-plugin:2.5.5:help");
+
         ConnectionFactory factory = context.newConnectionFactory();
         deleteQueue(factory, QUEUE_NAME);
         context.modules = MavenReader.readModel(exercise).getModules();
@@ -68,11 +70,11 @@ public class Part3Grader implements PartGrader {
                 Response<List<String>> messagesResponse = client.getMessages().execute();
                 if (!messagesResponse.isSuccessful()) {
                     grade -= maxGrade() / 2;
-                    errors.add("Unsuccessful response of GET /api/todo: " + messagesResponse.code());
+                    errors.add("Unsuccessful response of GET /api/message: " + messagesResponse.code());
                 } else {
                     if (!messagesResponse.body().isEmpty()) {
                         grade -= maxGrade() / 2;
-                        errors.add("GET /api/todo should respond with an empty list when no message was sent, but got: *" + messagesResponse.body().size() + " messages");
+                        errors.add("GET /api/message should respond with an empty list when no message was sent, but got: *" + messagesResponse.body().size() + " messages");
                     }
                 }
 
@@ -100,7 +102,7 @@ public class Part3Grader implements PartGrader {
                         Response<List<String>> secMessagesResponse = client.getMessages().execute();
                         if (!secMessagesResponse.isSuccessful()) {
                             grade -= maxGrade() / 2;
-                            errors.add("Unsuccessful response of GET /api/todo: " + secMessagesResponse.code());
+                            errors.add("Unsuccessful response of GET /api/message: " + secMessagesResponse.code());
                         } else {
                             if (secMessagesResponse.body().size() != callNbr) {
                                 grade -= maxGrade() / 2;
