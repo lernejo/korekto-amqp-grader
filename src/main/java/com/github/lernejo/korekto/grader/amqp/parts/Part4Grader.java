@@ -105,7 +105,7 @@ public class Part4Grader implements PartGrader {
             // Wait fot the client app to boot
 
             for (int i = 0; i < callNbr; i++) {
-                writeInput(process.process(), "message " + i + "\n");
+                writeInput(process.process(), "message:" + i + "\n");
             }
 
             readAllOutputLogs(process);
@@ -130,7 +130,7 @@ public class Part4Grader implements PartGrader {
             int messagesToSend = 15 - callNbr;
 
             for (int i = callNbr; i < messagesToSend; i++) {
-                writeInput(process.process(), "message " + i + "\n");
+                writeInput(process.process(), "message:" + i + "\n");
             }
 
             writeInput(process.process(), "q\n");
