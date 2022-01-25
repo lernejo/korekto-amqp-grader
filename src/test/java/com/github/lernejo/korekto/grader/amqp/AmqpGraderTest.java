@@ -34,7 +34,7 @@ class AmqpGraderTest {
         new GradingJob()
             .addCloneStep()
             .addStep("grading", grader)
-            .addStep("report", (conf, context) -> contextHolder.set(context))
+            .addStep("report", context -> contextHolder.set(context))
             .run(configuration);
 
         assertThat(contextHolder)

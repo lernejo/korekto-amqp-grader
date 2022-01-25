@@ -2,15 +2,14 @@ package com.github.lernejo.korekto.grader.amqp.parts;
 
 import com.github.lernejo.korekto.grader.amqp.ChatApiClient;
 import com.github.lernejo.korekto.grader.amqp.LaunchingContext;
-import com.github.lernejo.korekto.toolkit.Exercise;
 import com.github.lernejo.korekto.toolkit.GradePart;
-import com.github.lernejo.korekto.toolkit.GradingConfiguration;
+import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.misc.Ports;
 import com.github.lernejo.korekto.toolkit.misc.SubjectForToolkitInclusion;
-import com.github.lernejo.korekto.toolkit.thirdparty.git.GitContext;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutionHandle;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutor;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenInvocationResult;
+import org.jetbrains.annotations.NotNull;
 import org.mozilla.universalchardet.UniversalDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,17 +21,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-public class Part4Grader implements PartGrader {
+public class Part4Grader implements PartGrader<LaunchingContext> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Part4Grader.class);
 
-    public static final String QUEUE_NAME = "chat_messages";
     private final ChatApiClient client;
     private final Random random = new Random();
 
@@ -44,17 +42,17 @@ public class Part4Grader implements PartGrader {
     }
 
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "Part 4 - Client AMQP & message limit";
     }
 
     @Override
-    public Double maxGrade() {
+    public @NotNull Double maxGrade() {
         return 4.0D;
     }
 
     @Override
-    public GradePart grade(GradingConfiguration configuration, Exercise exercise, LaunchingContext context, GitContext gitContext) {
+    public @NotNull GradePart grade(LaunchingContext context) {
         if (context.compilationFailed) {
             return result(List.of("Not trying to start server as compilation failed"), 0.0D);
         }
@@ -62,15 +60,16 @@ public class Part4Grader implements PartGrader {
             return result(List.of("No *client* module defined in the root *pom.xml*"), 0.0D);
         }
 
-        MavenInvocationResult result = MavenExecutor.executeGoal(exercise, configuration.getWorkspace(), "dependency:build-classpath -DincludeScope=compile -Dmdep.outputFile=cp.txt -pl :client");
-        Path cpFilePath = exercise.getRoot().resolve("client").resolve("cp.txt");
+        MavenInvocationResult result = MavenExecutor.executeGoal(context.getExercise(), context.getConfiguration().getWorkspace(),
+            "dependency:build-classpath -DincludeScope=compile -Dmdep.outputFile=cp.txt -pl :client");
+        Path cpFilePath = context.getExercise().getRoot().resolve("client").resolve("cp.txt");
         if (result.getStatus() != MavenInvocationResult.Status.OK) {
             return result(List.of("Unable to determine *client* module classpath: \n```" + result.getOutput() + "\n```"), 0.0D);
         } else {
             try {
                 String cp = Files.readString(cpFilePath, StandardCharsets.UTF_8);
-                String fullCp = "-cp " + exercise.getRoot().resolve("client").resolve("target").resolve("classes") + File.pathSeparator + cp;
-                Files.write(cpFilePath, fullCp.getBytes(StandardCharsets.UTF_8));
+                String fullCp = "-cp " + context.getExercise().getRoot().resolve("client").resolve("target").resolve("classes") + File.pathSeparator + cp;
+                Files.writeString(cpFilePath, fullCp);
             } catch (IOException e) {
                 return result(List.of("Unable to generate CP file " + e.getMessage()), 0.0D);
             }
@@ -78,7 +77,7 @@ public class Part4Grader implements PartGrader {
 
         String mainClass = "fr.lernejo.chat.Launcher";
         ProcessBuilder processBuilder = new ProcessBuilder()
-            .directory(exercise.getRoot().toFile())
+            .directory(context.getExercise().getRoot().toFile())
             .command(
                 Paths.get(System.getProperty("java.home")).resolve("bin").resolve("java").toString(),
                 "@client/cp.txt",
@@ -86,7 +85,7 @@ public class Part4Grader implements PartGrader {
                 mainClass);
 
         try (CloseableProcess process = new CloseableProcess(processBuilder.start());
-             MavenExecutionHandle handle = MavenExecutor.executeGoalAsync(exercise, configuration.getWorkspace(),
+             MavenExecutionHandle ignored = MavenExecutor.executeGoalAsync(context.getExercise(), context.getConfiguration().getWorkspace(),
                  "org.springframework.boot:spring-boot-maven-plugin:2.5.5:run -pl :server -Dspring-boot.run.jvmArguments='-Dserver.port=8085 -Dspring.rabbitmq.port=" + context.rabbitPort + "'")) {
 
             Ports.waitForPortToBeListenedTo(8085, TimeUnit.SECONDS, 40L);
