@@ -1,5 +1,14 @@
 package com.github.lernejo.korekto.grader.amqp.parts;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import com.github.lernejo.korekto.grader.amqp.ChatApiClient;
 import com.github.lernejo.korekto.grader.amqp.LaunchingContext;
 import com.github.lernejo.korekto.toolkit.GradePart;
@@ -16,15 +25,6 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class Part3Grader implements PartGrader<LaunchingContext>, AmqpCapable {
 
@@ -63,7 +63,7 @@ public class Part3Grader implements PartGrader<LaunchingContext>, AmqpCapable {
             (MavenExecutionHandle ignored = MavenExecutor.executeGoalAsync(context.getExercise(), context.getConfiguration().getWorkspace(),
                 "org.springframework.boot:spring-boot-maven-plugin:2.5.5:run " + serverModuleSpec + " -Dspring-boot.run.jvmArguments='-Dserver.port=8085 -Dspring.rabbitmq.port=" + context.rabbitPort + "'")) {
 
-            Ports.waitForPortToBeListenedTo(8085, TimeUnit.SECONDS, 40L);
+            Ports.waitForPortToBeListenedTo(8085, TimeUnit.SECONDS, context.SERVER_START_TIMEOUT);
 
             double grade = maxGrade();
             List<String> errors = new ArrayList<>();
@@ -124,7 +124,7 @@ public class Part3Grader implements PartGrader<LaunchingContext>, AmqpCapable {
 
             return result(errors, grade);
         } catch (CancellationException e) {
-            return result(List.of("Server failed to start within 20 sec."), 0.0D);
+            return result(List.of("Server failed to start within " + context.SERVER_START_TIMEOUT + " sec."), 0.0D);
         } catch (RuntimeException e) {
             return result(List.of("Unwanted error during API invocation: " + e.getMessage()), 0.0D);
         } catch (IOException e) {

@@ -88,7 +88,7 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
              MavenExecutionHandle ignored = MavenExecutor.executeGoalAsync(context.getExercise(), context.getConfiguration().getWorkspace(),
                  "org.springframework.boot:spring-boot-maven-plugin:2.5.5:run -pl :server -Dspring-boot.run.jvmArguments='-Dserver.port=8085 -Dspring.rabbitmq.port=" + context.rabbitPort + "'")) {
 
-            Ports.waitForPortToBeListenedTo(8085, TimeUnit.SECONDS, 40L);
+            Ports.waitForPortToBeListenedTo(8085, TimeUnit.SECONDS, context.SERVER_START_TIMEOUT);
 
             if (!process.process().isAlive()) {
                 String error = readStream(process.process().getErrorStream());
@@ -166,7 +166,7 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
             }
             return result(errors, grade);
         } catch (CancellationException e) {
-            return result(List.of("Server failed to start within 20 sec."), 0.0D);
+            return result(List.of("Server failed to start within " + context.SERVER_START_TIMEOUT + " sec."), 0.0D);
         } catch (RuntimeException e) {
             return result(List.of("Unwanted error during API invocation: " + e.getMessage()), 0.0D);
         } catch (IOException e) {

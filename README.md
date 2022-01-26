@@ -21,6 +21,11 @@ mvn compile exec:java -Dexec.args="-s=yourGitHubLogin"
 
 ![Demo Run Configuration](https://raw.githubusercontent.com/lernejo/korekto-toolkit/main/docs/demo_run_configuration.png)
 
+## Timeouts
+
+Timeouts are overridable using the following system properties:
+* `-DSERVER_START_TIMEOUT=50` to wait at most 50 sec for the server to start
+
 ## GitHub API rate limiting
 
 When using the grader a lot, GitHub may block API calls for a certain amount of time (criterias change regularly).
