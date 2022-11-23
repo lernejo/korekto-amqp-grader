@@ -53,7 +53,7 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
 
     @Override
     public @NotNull GradePart grade(LaunchingContext context) {
-        if (context.compilationFailed) {
+        if (context.hasCompilationFailed()) {
             return result(List.of("Not trying to start server as compilation failed"), 0.0D);
         }
         if (!context.modules.contains("client")) {

@@ -48,7 +48,7 @@ public class Part3Grader implements PartGrader<LaunchingContext>, AmqpCapable {
 
     @Override
     public @NotNull GradePart grade(LaunchingContext context) {
-        if (context.compilationFailed) {
+        if (context.hasCompilationFailed()) {
             return result(List.of("Not trying to start server as compilation failed"), 0.0D);
         }
 
@@ -131,16 +131,6 @@ public class Part3Grader implements PartGrader<LaunchingContext>, AmqpCapable {
             return result(List.of("Fail to call server: " + e.getMessage()), 0.0D);
         } finally {
             Ports.waitForPortToBeFreed(8085, TimeUnit.SECONDS, 5L);
-        }
-    }
-
-    @SubjectForToolkitInclusion(additionalInfo = "in AmqpCapable")
-    private boolean doesQueueExists(Connection connection, String queueName) {
-        try (Channel channel = connection.createChannel()) {
-            AMQP.Queue.DeclareOk declareOk = channel.queueDeclarePassive(queueName);
-            return declareOk != null;
-        } catch (IOException | TimeoutException e) {
-            return false;
         }
     }
 }

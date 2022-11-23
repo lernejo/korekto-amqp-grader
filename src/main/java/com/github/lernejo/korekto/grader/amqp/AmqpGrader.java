@@ -1,23 +1,27 @@
 package com.github.lernejo.korekto.grader.amqp;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import com.github.lernejo.korekto.grader.amqp.parts.*;
-import com.github.lernejo.korekto.toolkit.*;
+import com.github.lernejo.korekto.grader.amqp.parts.Part3Grader;
+import com.github.lernejo.korekto.grader.amqp.parts.Part4Grader;
+import com.github.lernejo.korekto.toolkit.GradePart;
+import com.github.lernejo.korekto.toolkit.Grader;
+import com.github.lernejo.korekto.toolkit.GradingConfiguration;
+import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.misc.HumanReadableDuration;
 import com.github.lernejo.korekto.toolkit.misc.Ports;
 import com.github.lernejo.korekto.toolkit.misc.SubjectForToolkitInclusion;
-import com.github.lernejo.korekto.toolkit.thirdparty.git.GitNature;
+import com.github.lernejo.korekto.toolkit.partgrader.GitHubActionsPartGrader;
+import com.github.lernejo.korekto.toolkit.partgrader.MavenCompileAndTestPartGrader;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @SubjectForToolkitInclusion
 public class AmqpGrader implements Grader<LaunchingContext> {
@@ -89,8 +93,8 @@ public class AmqpGrader implements Grader<LaunchingContext> {
 
     private Collection<? extends PartGrader<LaunchingContext>> graders() {
         return List.of(
-            new Part1Grader(),
-            new Part2Grader(),
+            new MavenCompileAndTestPartGrader<>("Part 1 - Compilation & Tests", 2.0D),
+            new GitHubActionsPartGrader<>("Part 2 - CI", 1.0D),
             new Part3Grader(client),
             new Part4Grader(client)
         );
