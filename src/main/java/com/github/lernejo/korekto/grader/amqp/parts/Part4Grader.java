@@ -9,6 +9,7 @@ import com.github.lernejo.korekto.toolkit.misc.SubjectForToolkitInclusion;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutionHandle;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutor;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenInvocationResult;
+import org.awaitility.Awaitility;
 import org.jetbrains.annotations.NotNull;
 import org.mozilla.universalchardet.UniversalDetector;
 import org.slf4j.Logger;
@@ -115,10 +116,15 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
                 throw new IllegalStateException("Sleep have been interrupted!");
             }
 
-            Response<List<String>> response = client.getMessages().execute();
+            Response<List<String>> response = Awaitility.await().atMost(4, TimeUnit.SECONDS)
+                .until(
+                    () -> client.getMessages().execute(),
+                    r -> !r.isSuccessful() || r.body().size() == callNbr);
+
             if (!response.isSuccessful()) {
                 grade = 0;
                 errors.add("Unsuccessful response of GET /api/message: " + response.code());
+                return result(errors, grade);
             } else {
                 if (response.body().size() != callNbr) {
                     grade = 0;
@@ -144,17 +150,13 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
                 }
             } while (counter < 20 && process.process().isAlive());
 
-
-            // TODO replace with a queueDeclarePassive check on ready ?
-            try {
-                TimeUnit.MILLISECONDS.sleep(1000L);
-            } catch (InterruptedException e) {
-                throw new IllegalStateException("Sleep have been interrupted!");
-            }
-
-            response = client.getMessages().execute();
-
             int maxMessages = 10;
+
+            response = Awaitility.await().atMost(4, TimeUnit.SECONDS)
+                .until(
+                    () -> client.getMessages().execute(),
+                    r -> !r.isSuccessful() || r.body().size() == maxMessages);
+
             if (!response.isSuccessful()) {
                 grade = 0;
                 errors.add("Unsuccessful response of GET /api/message: " + response.code());
