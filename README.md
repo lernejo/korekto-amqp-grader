@@ -24,7 +24,8 @@ mvn compile exec:java -Dexec.args="-s=yourGitHubLogin"
 ## Timeouts
 
 Timeouts are overridable using the following system properties:
-* `-DSERVER_START_TIMEOUT=50` to wait at most 50 sec for the server to start
+* `-Dserver_start_timeout=40` to wait at most 50 sec for the server to start
+* `-Dqueue_read_timeout=4` to await at most 4 sec for reading messages from the queue
 
 ## GitHub API rate limiting
 

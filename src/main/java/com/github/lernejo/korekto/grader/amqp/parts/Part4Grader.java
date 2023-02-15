@@ -10,6 +10,7 @@ import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutionHandle;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutor;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenInvocationResult;
 import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
 import org.jetbrains.annotations.NotNull;
 import org.mozilla.universalchardet.UniversalDetector;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Part4Grader implements PartGrader<LaunchingContext> {
 
@@ -116,19 +118,35 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
                 throw new IllegalStateException("Sleep have been interrupted!");
             }
 
-            Response<List<String>> response = Awaitility.await().atMost(4, TimeUnit.SECONDS)
-                .until(
-                    () -> client.getMessages().execute(),
-                    r -> !r.isSuccessful() || r.body().size() == callNbr);
+            AtomicReference<Response<List<String>>> response = new AtomicReference<>();
+            try {
+                Awaitility.await().atMost(context.QUEUE_READ_TIMEOUT, TimeUnit.SECONDS)
+                    .until(
+                        () -> {
+                            response.set(client.getMessages().execute());
+                            return response.get();
+                        },
+                        r -> !r.isSuccessful() || r.body().size() == callNbr);
+            } catch (ConditionTimeoutException e) {
+                String message = "Timeout waiting for API to display the " + callNbr + " sent messages, after " + context.QUEUE_READ_TIMEOUT + " seconds";
+                if (response.get() != null) {
+                    if (!response.get().isSuccessful()) {
+                        message += ", bad response code: " + response.get().code();
+                    } else {
+                        message += ", only got `" + response.get().body() + "`";
+                    }
+                }
+                return result(List.of(message), 0.0D);
+            }
 
-            if (!response.isSuccessful()) {
+            if (!response.get().isSuccessful()) {
                 grade = 0;
-                errors.add("Unsuccessful response of GET /api/message: " + response.code());
+                errors.add("Unsuccessful response of GET /api/message: " + response.get().code());
                 return result(errors, grade);
             } else {
-                if (response.body().size() != callNbr) {
+                if (response.get().body().size() != callNbr) {
                     grade = 0;
-                    errors.add("GET /api/message should respond a list of " + callNbr + " messages (messages sent), but was: " + response.body().size());
+                    errors.add("GET /api/message should respond a list of " + callNbr + " messages (messages sent), but was: " + response.get().body().size());
                 }
             }
 
@@ -152,18 +170,32 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
 
             int maxMessages = 10;
 
-            response = Awaitility.await().atMost(4, TimeUnit.SECONDS)
-                .until(
-                    () -> client.getMessages().execute(),
-                    r -> !r.isSuccessful() || r.body().size() == maxMessages);
-
-            if (!response.isSuccessful()) {
+            try {
+                Awaitility.await().atMost(context.QUEUE_READ_TIMEOUT, TimeUnit.SECONDS)
+                    .until(
+                        () -> {
+                            response.set(client.getMessages().execute());
+                            return response.get();
+                        },
+                        r -> !r.isSuccessful() || r.body().size() == maxMessages);
+            } catch (ConditionTimeoutException e) {
+                String message = "Timeout waiting for API to display the last " + maxMessages + " sent messages, after " + context.QUEUE_READ_TIMEOUT + " seconds";
+                if (response.get() != null) {
+                    if (!response.get().isSuccessful()) {
+                        message += ", bad response code: " + response.get().code();
+                    } else {
+                        message += ", only got `" + response.get().body() + "`";
+                    }
+                }
+                return result(List.of(message), 0.0D);
+            }
+            if (!response.get().isSuccessful()) {
                 grade = 0;
-                errors.add("Unsuccessful response of GET /api/message: " + response.code());
+                errors.add("Unsuccessful response of GET /api/message: " + response.get().code());
             } else {
-                if (response.body().size() != maxMessages) {
+                if (response.get().body().size() != maxMessages) {
                     grade -= maxGrade() / 2;
-                    errors.add("GET /api/message should respond a list of the last *" + maxMessages + "* messages received but returned *" + response.body().size() + "*");
+                    errors.add("GET /api/message should respond a list of the last *" + maxMessages + "* messages received but returned *" + response.get().body().size() + "*");
                 }
             }
             return result(errors, grade);

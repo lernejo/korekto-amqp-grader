@@ -10,7 +10,8 @@ import java.util.List;
 
 public class LaunchingContext extends GradingContext implements MavenContext {
     public final Integer rabbitPort;
-    public final long SERVER_START_TIMEOUT = Long.valueOf(System.getProperty("SERVER_START_TIMEOUT", "40"));
+    public final long SERVER_START_TIMEOUT = Long.valueOf(System.getProperty("server_start_timeout", "40"));
+    public final long QUEUE_READ_TIMEOUT = Long.valueOf(System.getProperty("queue_read_timeout", "4"));
     private boolean compilationFailed;
     private boolean testFailed;
     public List<String> modules = new ArrayList<>();
