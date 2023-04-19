@@ -20,7 +20,7 @@
         <jackson.version>2.14.2</jackson.version>
         <juniversalchardet.version>2.4.0</juniversalchardet.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <logback-classic.version>1.4.5</logback-classic.version>
+        <logback-classic.version>1.4.7</logback-classic.version>
 
         <junit.version>5.9.2</junit.version>
         <assertj.version>3.24.2</assertj.version>
