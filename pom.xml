@@ -17,7 +17,7 @@
         <retrofit.version>2.9.0</retrofit.version>
         <testcontainers.version>1.17.6</testcontainers.version>
         <amqp-client.version>5.16.0</amqp-client.version>
-        <jackson.version>2.14.2</jackson.version>
+        <jackson.version>2.15.0</jackson.version>
         <juniversalchardet.version>2.4.0</juniversalchardet.version>
         <awaitility.version>4.2.0</awaitility.version>
         <logback-classic.version>1.4.5</logback-classic.version>
