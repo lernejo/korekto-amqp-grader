@@ -1,5 +1,7 @@
 package com.github.lernejo.korekto.grader.amqp.parts;
 
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.github.lernejo.korekto.grader.amqp.ChatApiClient;
 import com.github.lernejo.korekto.grader.amqp.LaunchingContext;
 import com.github.lernejo.korekto.toolkit.GradePart;
@@ -137,6 +139,14 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
                     }
                 }
                 return result(List.of(message), 0.0D);
+            } catch (Exception e) {
+                if (e instanceof JacksonException je) {
+                    grade = 0;
+                    errors.add("Invalid JSON response for GET /api/message: " + je.getOriginalMessage());
+                    return result(errors, grade);
+                } else {
+                    throw new RuntimeException(e);
+                }
             }
 
             if (!response.get().isSuccessful()) {

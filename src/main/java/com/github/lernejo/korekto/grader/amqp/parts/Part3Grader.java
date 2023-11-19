@@ -9,6 +9,8 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.github.lernejo.korekto.grader.amqp.ChatApiClient;
 import com.github.lernejo.korekto.grader.amqp.LaunchingContext;
 import com.github.lernejo.korekto.toolkit.GradePart;
@@ -101,15 +103,20 @@ public class Part3Grader implements PartGrader<LaunchingContext>, AmqpCapable {
                             throw new IllegalStateException("Sleep have been interrupted!");
                         }
 
-                        Response<List<String>> secMessagesResponse = client.getMessages().execute();
-                        if (!secMessagesResponse.isSuccessful()) {
-                            grade -= maxGrade() / 2;
-                            errors.add("Unsuccessful response of GET /api/message: " + secMessagesResponse.code());
-                        } else {
-                            if (secMessagesResponse.body().size() != callNbr) {
+                        try {
+                            Response<List<String>> secMessagesResponse = client.getMessages().execute();
+                            if (!secMessagesResponse.isSuccessful()) {
                                 grade -= maxGrade() / 2;
-                                errors.add("GET /api/message should respond a list of " + callNbr + " messages (messages sent), but was: " + secMessagesResponse.body().size());
+                                errors.add("Unsuccessful response of GET /api/message: " + secMessagesResponse.code());
+                            } else {
+                                if (secMessagesResponse.body().size() != callNbr) {
+                                    grade -= maxGrade() / 2;
+                                    errors.add("GET /api/message should respond a list of " + callNbr + " messages (messages sent), but was: " + secMessagesResponse.body().size());
+                                }
                             }
+                        } catch(JacksonException e) {
+                            grade = 0;
+                            errors.add("Invalid JSON response for GET /api/message: " + e.getOriginalMessage());
                         }
                     }
 
