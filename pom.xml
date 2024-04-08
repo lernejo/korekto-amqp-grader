@@ -16,7 +16,7 @@
         <korekto-toolkit.version>1.3.11</korekto-toolkit.version>
         <retrofit.version>2.11.0</retrofit.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <amqp-client.version>5.20.0</amqp-client.version>
+        <amqp-client.version>5.21.0</amqp-client.version>
         <jackson.version>2.17.0</jackson.version>
         <juniversalchardet.version>2.4.0</juniversalchardet.version>
         <awaitility.version>4.2.1</awaitility.version>
